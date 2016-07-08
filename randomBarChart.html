@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+	<head>
+		<meta charset="utf-8">
+		<title>D3: Random Bar Chart</title>
+		<script type="text/javascript" src="https://d3js.org/d3.v4.js"></script>
+		<!-- <script type="text/javascript" src="https://d3js.org/d3.v3.js"></script> -->
+		<script src="https://d3js.org/d3-selection-multi.v0.4.min.js"></script> <!--to be able to use multi-valued maps, since tehy are no longer a part of the default bundle -->
+		<style type="text/css">
+			/* No style rules here yet */		
+		</style>
+
+	</head>
+
+
+	<body>
+
+		<p>Click on this text to update the chart with new data values.</p>
+
+		<script type="text/javascript">
+			
+			//Width and height
+			var w = 1000;
+			var h = 500;
+			var barPadding = 1;
+			
+
+
+			var dataset = [ 5, 10, 13, 19, 21, 25, 22, 18, 15, 13,
+                11, 12, 15, 20, 18, 17, 16, 18, 23, 25 ];
+
+
+			var xScale = d3.scaleBand() /* we declare a new variable called xScale.  Ordinal scales are typically used for ordinal data, typically categories with some inherent order to 				them */
+
+							.domain( d3.range( dataset.length) ) /* sets the input domain for the scale; d3.range() is a quick way to generate an array of sequential numbers <=> .domain([0, 1, 2, 3, 4, (...) 16, 17, 18, 19]). To set the domain of an ordinal scale, you typically specify an array with the category names, as in: .domain(["freshman", "sophomore", "junior", "senior"]) */
+
+							.rangeRound( [0, w])
+							.paddingInner(0.05);
+
+			var yScale = d3.scaleLinear()
+							.domain([0, d3.max(dataset, function(d){ return d})])
+							.range([0, h]);
+
+
+			//Create SVG element
+			var svg = d3.select("body")
+						.append("svg")
+						.attr("width", w)
+						.attr("height", h);
+
+
+
+
+			var rectangles = svg.selectAll("rect") //selects all rects inside of svg. Of course, there aren’t any yet, so an empty selection is returned. (Weird, yes, but stay with me. With D3, you always have to first select whatever it is you’re about to act on, even if that selection is momentarily empty.)
+			    .data(dataset) // sees that we have 20 values in the dataset, and those values are handed off to enter() for processing
+			    .enter() // returns a placeholder selection for each data point that does not yet have a corresponding rect
+			    .append("rect") //adds a circle to the DOM
+				.attr("x", function(d, i){
+			    	return xScale(i);
+			    })
+			    .attr("y", function(d){
+			    	return h-yScale(d);
+			    })
+			    .attr("width", xScale.bandwidth() )
+			    .attr("height", function(d){
+			    	return yScale(d);
+			    })
+			    .attr("fill", function(d){
+			    	return "rgb(50, 200, " + (d * 10 ) + ")";
+			    });
+
+			    svg.selectAll("text")
+			    	.data(dataset)
+			    	.enter()
+			    	.append("text")
+			    	.text( function(d){return d;} )	
+			    	.attr("x", function(d, i){ return xScale(i) + xScale.bandwidth()/2 } )	// setting x position to the left edge of each bar plus half the bar width:
+			    	.attr("y", function(d){ return h - yScale(d) + 14 })
+			    	.attr("font-family", "sans-serif")
+			    	.attr("font-size", "15px")
+			    	.attr("fill", "white")
+			    	.attr("text-anchor", "middle");
+
+
+
+
+
+
+			    d3.select("p") //selects p
+    				.on("click", function() { //adds an event listener to  the selected element
+    						   //New values for dataset
+				        //dataset = [ 11, 12, 15, 20, 18, 17, 16, 18, 23, 25,
+				          //          5, 10, 13, 19, 21, 25, 22, 18, 15, 13 ];
+
+						//New values for dataset
+						var maxValue = 30;
+						var numValues = dataset.length;               //Count original length of dataset
+						dataset = [];                                       //Initialize empty array
+						for (var i = 0; i < numValues; i++) {               //Loop numValues times
+						    var newNumber = Math.floor(Math.random() * maxValue); //New random integer (0-24)
+						    dataset.push(newNumber);                        //Add new number to array
+						}
+
+
+						//Update scale domain
+						//Recalibrate the scale domain, given the new max value in dataset
+						yScale.domain([0, d3.max(dataset)]);
+
+
+				        //Update all rects
+				        svg.selectAll("rect")
+				           .data(dataset)
+				           .transition()
+				           .delay(function(d, i) { /* A common use of this is to generate staggered delays, so some elements transition
+													/*before others. Staggered delays can assist with perception, as it’s easier for our eyes to
+													follow an individual element’s motion when it is slightly out of sync with its neighboring
+													elements’ motion.*/
+							    return i / dataset.length * 1000;
+							})
+				           .duration(500)
+				           //.ease(d3.easeBounce)
+				           .attr("y", function(d) {
+				                return h - yScale(d);
+				           	})
+				           .attr("height", function(d) {
+				                return yScale(d);
+				            })
+				            .attr("fill", function(d){
+			    				return "rgb(50, 200, " + (d  * 10 ) + ")";
+
+				        });
+
+					    svg.selectAll("text")
+						   .data(dataset)
+						   	.transition()
+						   	.delay(function(d, i) { 
+							 	return i / dataset.length * 1100;
+							})
+						   	.duration(500)
+						   	.ease(d3.easeLinear)
+				           
+
+						   .text(function(d) {
+						        return d;
+						   })
+						   .attr("x", function(d, i) {
+						        return xScale(i) + xScale.bandwidth() / 2;
+						   })
+						   .attr("y", function(d) {
+						   	        return h - yScale(d) + 14;
+						   })
+							.attr("font-family", "sans-serif")
+					    	.attr("font-size", "15px")
+					    	.attr("fill", "white")
+					    	.attr("text-anchor", "middle");
+			    });
+
+
+		</script>
+
+	</body>
+
+</html>
