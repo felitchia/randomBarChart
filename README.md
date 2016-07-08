@@ -1,4 +1,4 @@
-# random Bar Chart
+# Random Bar Chart
 
 
 Random dynamic bar chart created using d3.js library following Scott Muray tutorials. 
